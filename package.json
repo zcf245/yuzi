@@ -8,7 +8,7 @@
     "dev": "pnpm dev:client",
     "build:client": "vite build",
     "prebuild": "pnpm install --no-frozen-lockfile && npx prisma generate",
-    "build": "rm -rf dist && pnpm build:client && cp package.json dist/",
+    "build": "rm -rf dist && pnpm build:client && cp package.json dist/ && cp -r node_modules/.prisma dist/",
     "vercel-build": "pnpm build"
   },
   "dependencies": {

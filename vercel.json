@@ -9,12 +9,16 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist"
+        "distDir": "dist",
+        "buildCommand": "pnpm install && npx prisma generate && pnpm build"
       }
     },
     {
       "src": "api/**/*.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "buildCommand": "pnpm install && npx prisma generate"
+      }
     }
   ],
   "routes": [
