@@ -8,8 +8,8 @@
     "dev": "pnpm dev:client",
     "build:client": "vite build",
     "prebuild": "pnpm install --no-frozen-lockfile && npx prisma generate",
-    "build": "rm -rf dist && pnpm build:client",
-    "deploy": "pnpm build && supabase storage upload --bucket=static-files dist/*"
+    "build": "rm -rf dist && pnpm build:client && cp package.json dist/",
+    "vercel-build": "pnpm build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.1",
