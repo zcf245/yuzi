@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
+import prisma from '../../lib/prisma';
 
 // 临时模拟数据库存储，实际生产环境请使用真正的数据库
 interface ActivationKey {
@@ -49,57 +50,107 @@ let keys: ActivationKey[] = [
   },
 ];
 
-
-export default function handler(request: VercelRequest, response: VercelResponse) {
-  // 根据请求方法处理不同的操作
+export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (request.method === 'GET') {
-    // 获取所有卡密
-    return response.status(200).json(keys);
-  } else if (request.method === 'POST') {
-    // 这里可以添加生成卡密的逻辑
-    // 假设接收一个包含 `count`, `prefix`, `suffix`, `validDays` 的请求体
-    const { count, prefix, suffix, validDays } = request.body;
-
-    if (!count || count <= 0) {
-      return response.status(400).json({ success: false, message: 'Invalid count' });
+    try {
+      const keys = await prisma.activationKey.findMany({
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+      
+      return response.status(200).json({
+        success: true,
+        data: keys
+      });
+    } catch (error) {
+      console.error('Error fetching keys:', error);
+      return response.status(500).json({
+        success: false,
+        message: '获取卡密列表失败'
+      });
     }
+  }
 
-    const newKeys: ActivationKey[] = [];
-    for (let i = 0; i < count; i++) {
-      const key = `${prefix || ''}${uuidv4().slice(0, 8).toUpperCase()}${suffix || ''}`; // 简化生成
-      newKeys.push({
-        id: uuidv4(),
-        key,
-        prefix: prefix || '',
-        suffix: suffix || '',
-        createdAt: new Date().toISOString(),
-        expiresAt: '', // 初始为空，激活时设置
-        status: 'inactive',
-        validDays: validDays || 1,
+  if (request.method === 'POST') {
+    const { count = 1, prefix = '', suffix = '', validDays = 30 } = request.body;
+
+    if (count < 1 || count > 100) {
+      return response.status(400).json({
+        success: false,
+        message: '生成数量必须在1-100之间'
       });
     }
 
-    keys = [...newKeys, ...keys]; // 将新生成的卡密添加到现有卡密列表
-    return response.status(200).json({ success: true, message: `成功生成 ${count} 个卡密`, newKeys });
+    try {
+      const newKeys = [];
+      for (let i = 0; i < count; i++) {
+        // 生成25位卡密，包含前缀和后缀
+        const baseUuid = uuidv4().replace(/-/g, ''); // 移除UUID中的连字符
+        const prefixLength = prefix ? prefix.length : 0;
+        const suffixLength = suffix ? suffix.length : 0;
+        const neededRandomLength = Math.max(0, 25 - prefixLength - suffixLength);
+        const randomPart = baseUuid.slice(0, neededRandomLength);
 
-  } else if (request.method === 'DELETE') {
-    // 处理删除卡密（例如批量删除）
-    const { ids } = request.body; // ids 应该是一个卡密ID数组
+        const key = `${prefix || ''}${randomPart}${suffix || ''}`;
+        
+        const newKey = await prisma.activationKey.create({
+          data: {
+            key,
+            prefix: prefix || null,
+            suffix: suffix || null,
+            validDays
+          }
+        });
+        
+        newKeys.push(newKey);
+      }
 
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return response.status(400).json({ success: false, message: '请提供要删除的卡密ID' });
-    }
-
-    const initialLength = keys.length;
-    keys = keys.filter(key => !ids.includes(key.id));
-    const deletedCount = initialLength - keys.length;
-
-    if (deletedCount > 0) {
-      return response.status(200).json({ success: true, message: `成功删除 ${deletedCount} 个卡密` });
-    } else {
-      return response.status(404).json({ success: false, message: '未找到要删除的卡密' });
+      return response.status(200).json({
+        success: true,
+        message: '卡密生成成功',
+        data: newKeys
+      });
+    } catch (error) {
+      console.error('Error generating keys:', error);
+      return response.status(500).json({
+        success: false,
+        message: '生成卡密失败'
+      });
     }
   }
-  
-  response.status(405).json({ message: 'Method Not Allowed' });
+
+  if (request.method === 'DELETE') {
+    const { ids } = request.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return response.status(400).json({
+        success: false,
+        message: '请提供要删除的卡密ID列表'
+      });
+    }
+
+    try {
+      await prisma.activationKey.deleteMany({
+        where: {
+          id: {
+            in: ids
+          }
+        }
+      });
+
+      return response.status(200).json({
+        success: true,
+        message: '卡密删除成功'
+      });
+    } catch (error) {
+      console.error('Error deleting keys:', error);
+      return response.status(500).json({
+        success: false,
+        message: '删除卡密失败'
+      });
+    }
+  }
+
+  return response.status(405).json({ message: 'Method Not Allowed' });
 } 

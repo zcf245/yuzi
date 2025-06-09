@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ActivationKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  prefix    String?
+  suffix    String?
+  status    String   @default("inactive") // inactive, active, expired
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+  usedAt    DateTime?
+  deviceId  String?
+  validDays Int      @default(30)
+}
+
+model ActivationRecord {
+  id        String   @id @default(uuid())
+  keyId     String
+  deviceId  String
+  activatedAt DateTime @default(now())
+  expiresAt DateTime
+  status    String   @default("active") // active, expired
+}
