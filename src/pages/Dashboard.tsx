@@ -491,7 +491,7 @@ export default function Dashboard() {
             className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20 transition-colors"
           >
             <i className="fa-solid fa-key mr-2"></i>
-            卡密管理
+            卡密管理中心
           </button>
         </div>
 
@@ -559,9 +559,9 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg shadow-md p-6"
+            className="bg-[#0A192F]/70 backdrop-blur-sm rounded-xl border border-[#00D1FF]/30 p-6"
           >
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">卡密状态分布</h3>
+            <h3 className="text-lg font-semibold text-[#00D1FF] mb-4">卡密状态分布</h3>
             <div className="h-80">
               <Doughnut data={getStatusDistribution()} />
             </div>
@@ -570,9 +570,9 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-lg shadow-md p-6"
+            className="bg-[#0A192F]/70 backdrop-blur-sm rounded-xl border border-[#00D1FF]/30 p-6"
           >
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">激活趋势</h3>
+            <h3 className="text-lg font-semibold text-[#00D1FF] mb-4">激活趋势</h3>
             <div className="h-80">
               <Line data={getActivationTrend()} />
             </div>
@@ -581,9 +581,9 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-lg shadow-md p-6"
+            className="bg-[#0A192F]/70 backdrop-blur-sm rounded-xl border border-[#00D1FF]/30 p-6"
           >
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">设备分布</h3>
+            <h3 className="text-lg font-semibold text-[#00D1FF] mb-4">设备分布</h3>
             <div className="h-80">
               <Bar data={getDeviceDistribution()} />
             </div>

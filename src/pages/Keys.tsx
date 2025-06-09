@@ -27,6 +27,7 @@ interface ActivationKey {
   expiresAt: string;
   usedAt?: string;
   deviceId?: string;
+  validDays: number;
 }
 
 interface KeyGenFormValues {
@@ -56,6 +57,7 @@ const mockKeys: ActivationKey[] = [
     createdAt: "2025-06-08T10:30:00",
     expiresAt: "2025-07-08T10:30:00",
     status: "active",
+    validDays: 1,
   },
   {
     id: "3",
@@ -65,6 +67,7 @@ const mockKeys: ActivationKey[] = [
     createdAt: "2025-06-09T08:15:00",
     expiresAt: "2025-07-09T08:15:00",
     status: "inactive",
+    validDays: 1,
   },
   {
     id: "2",
@@ -74,6 +77,7 @@ const mockKeys: ActivationKey[] = [
     createdAt: "2025-06-07T14:45:00",
     expiresAt: "2025-06-14T14:45:00",
     status: "expired",
+    validDays: 1,
   },
 ];
 
@@ -162,9 +166,12 @@ export default function Keys() {
         newKeys.push({
           id: uuidv4(),
           key,
+          prefix: data.prefix || '',
+          suffix: data.suffix || '',
           status: 'inactive',
           createdAt: new Date().toISOString(),
-          expiresAt: new Date(Date.now() + data.validDays * 24 * 60 * 60 * 1000).toISOString(),
+          expiresAt: '', // 初始为空，激活时再设置
+          validDays: data.validDays, // 保存有效期天数
         });
       }
 
@@ -212,9 +219,20 @@ export default function Keys() {
 
   // 更新卡密状态时更新localStorage
   const handleStatusChange = (keyId: string, newStatus: 'inactive' | 'active' | 'used' | 'expired') => {
-    const updatedKeys = keys.map(key => 
-      key.id === keyId ? { ...key, status: newStatus } : key
-    );
+    const updatedKeys = keys.map(key => {
+      if (key.id === keyId) {
+        if (newStatus === 'active' && key.status === 'inactive') {
+          // 如果是激活操作，设置过期时间
+          return {
+            ...key,
+            status: newStatus,
+            expiresAt: new Date(Date.now() + (key.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
+          };
+        }
+        return { ...key, status: newStatus };
+      }
+      return key;
+    });
     setKeys(updatedKeys);
     localStorage.setItem('keys', JSON.stringify(updatedKeys));
     toast.success('状态已更新');
