@@ -2,6 +2,13 @@
   "framework": "vite",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist/static",
+  "installCommand": "pnpm install",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
     {
       "src": "/assets/(.*)",
