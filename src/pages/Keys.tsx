@@ -493,6 +493,15 @@ export default function Keys() {
                           <td>
                             <div className="flex gap-2">
                               <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(key.key);
+                                  toast.success('卡密已复制到剪贴板');
+                                }}
+                                className="text-[#00D1FF] hover:text-[#64FFDA] transition-colors"
+                              >
+                                复制
+                              </button>
+                              <button
                                 onClick={() => handleStatusChange(key.id, key.status === 'active' ? 'inactive' : 'active')}
                                 className="text-[#00D1FF] hover:text-[#00D1FF]/80"
                               >
