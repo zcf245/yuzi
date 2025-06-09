@@ -39,7 +39,7 @@ export default defineConfig({
         drop_debugger: true
       }
     },
-    outDir: 'dist/static',
+    outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
       output: {
