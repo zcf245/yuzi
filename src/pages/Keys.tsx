@@ -435,24 +435,8 @@ export default function Keys() {
 
             {activeTab === 'manage' && (
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">管理卡密</h2>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleExport}
-                      className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20"
-                    >
-                      批量导出
-                    </button>
-                    <button
-                      onClick={handleBatchDelete}
-                      className="px-4 py-2 bg-red-500/10 border border-red-500/50 text-red-500 rounded-lg hover:bg-red-500/20"
-                    >
-                      批量删除
-                    </button>
-                  </div>
-                </div>
-                <div className="mb-4 flex gap-4">
+                <h2 className="text-xl font-semibold mb-4">管理卡密</h2>
+                <div className="flex flex-col md:flex-row gap-4 mb-4 items-center">
                   <input
                     type="text"
                     placeholder="搜索卡密..."
@@ -463,13 +447,27 @@ export default function Keys() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="cyber-input"
+                    className="cyber-input md:w-auto"
                   >
                     <option value="all">全部状态</option>
                     <option value="active">已激活</option>
                     <option value="inactive">未激活</option>
                     <option value="expired">已过期</option>
                   </select>
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <button
+                      onClick={handleExport}
+                      className="flex-1 px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20"
+                    >
+                      批量导出
+                    </button>
+                    <button
+                      onClick={handleBatchDelete}
+                      className="flex-1 px-4 py-2 bg-red-500/10 border border-red-500/50 text-red-500 rounded-lg hover:bg-red-500/20"
+                    >
+                      批量删除
+                    </button>
+                  </div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full cyber-table">
