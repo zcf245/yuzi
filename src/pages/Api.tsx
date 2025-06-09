@@ -261,19 +261,19 @@ export default function Api() {
             <h2 className="text-xl font-semibold mb-4 text-[#00D1FF]">API测试</h2>
             
             {/* API密钥管理 */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-              <h3 className="text-xl font-semibold mb-4">API密钥管理</h3>
+            <div className="bg-[#0A192F]/70 backdrop-blur-sm rounded-xl border border-[#00D1FF]/30 p-6 mb-8">
+              <h3 className="text-xl font-semibold mb-4 text-[#00D1FF]">API密钥管理</h3>
               <div className="flex gap-4 mb-4">
                 <input
                   type="text"
                   value={newApiKeyName}
                   onChange={(e) => setNewApiKeyName(e.target.value)}
                   placeholder="输入API密钥名称"
-                  className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-2 bg-[#0A192F]/50 border border-[#00D1FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D1FF]/50 text-white"
                 />
                 <button
                   onClick={generateApiKey}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="px-6 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20 transition-colors"
                 >
                   生成密钥
                 </button>
@@ -281,7 +281,7 @@ export default function Api() {
               <select
                 value={selectedApiKey}
                 onChange={(e) => setSelectedApiKey(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-[#0A192F]/50 border border-[#00D1FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D1FF]/50 text-white"
               >
                 <option value="">选择API密钥</option>
                 {apiKeys.map(key => (

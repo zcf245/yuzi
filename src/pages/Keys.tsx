@@ -519,12 +519,14 @@ export default function Keys() {
                               >
                                 复制
                               </button>
-                              <button
-                                onClick={() => handleStatusChange(key.id, key.status === 'active' ? 'inactive' : 'active')}
-                                className="text-[#00D1FF] hover:text-[#00D1FF]/80"
-                              >
-                                {key.status === 'active' ? '停用' : '激活'}
-                              </button>
+                              {key.status === 'active' && (
+                                <button
+                                  onClick={() => handleStatusChange(key.id, 'inactive')}
+                                  className="text-red-400 hover:text-red-300"
+                                >
+                                  失效
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleDeleteKey(key.id)}
                                 className="text-red-400 hover:text-red-300"

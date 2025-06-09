@@ -486,13 +486,30 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#00D1FF]">数据看板</h1>
-          <button
-            onClick={() => navigate("/keys")}
-            className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20 transition-colors"
-          >
-            <i className="fa-solid fa-key mr-2"></i>
-            卡密管理中心
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={dateRange.startDate}
+                onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                className="px-4 py-2 bg-[#0A192F]/50 border border-[#00D1FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D1FF]/50 text-white"
+              />
+              <span className="text-white/60">至</span>
+              <input
+                type="date"
+                value={dateRange.endDate}
+                onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                className="px-4 py-2 bg-[#0A192F]/50 border border-[#00D1FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D1FF]/50 text-white"
+              />
+            </div>
+            <button
+              onClick={() => navigate("/keys")}
+              className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20 transition-colors"
+            >
+              <i className="fa-solid fa-key mr-2"></i>
+              卡密管理中心
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
