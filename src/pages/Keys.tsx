@@ -319,17 +319,17 @@ export default function Keys() {
             {activeTab === 'generate' && (
               <div>
                 <h2 className="text-xl font-semibold mb-4">生成卡密</h2>
-                <form onSubmit={handleSubmit(generateKeys)} className="space-y-4">
+              <form onSubmit={handleSubmit(generateKeys)} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                <div>
                       <label className="block text-sm font-medium text-white/80 mb-1">生成数量</label>
-                      <input
-                        type="number"
-                        {...register("count", { valueAsNumber: true })}
+                  <input
+                    type="number"
+                    {...register("count", { valueAsNumber: true })}
                         className="w-full cyber-input"
-                        min="1"
-                        max="100"
-                      />
+                    min="1"
+                    max="100"
+                  />
                       {errors.count && (
                         <p className="text-red-400 text-sm mt-1">{errors.count.message}</p>
                       )}
@@ -347,33 +347,33 @@ export default function Keys() {
                         <p className="text-red-400 text-sm mt-1">{errors.validDays.message}</p>
                       )}
                     </div>
-                  </div>
+                </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                <div>
                       <label className="block text-sm font-medium text-white/80 mb-1">前缀</label>
-                      <input
-                        type="text"
-                        {...register("prefix")}
+                  <input
+                    type="text"
+                    {...register("prefix")}
                         className="w-full cyber-input"
-                        maxLength={10}
-                      />
-                    </div>
-                    <div>
+                    maxLength={10}
+                  />
+                </div>
+                <div>
                       <label className="block text-sm font-medium text-white/80 mb-1">后缀</label>
-                      <input
-                        type="text"
-                        {...register("suffix")}
+                  <input
+                    type="text"
+                    {...register("suffix")}
                         className="w-full cyber-input"
-                        maxLength={10}
-                      />
-                    </div>
+                    maxLength={10}
+                  />
+                </div>
                   </div>
-                  <div>
+                <div>
                     <label className="block text-sm font-medium text-white/80 mb-1">预览</label>
                     <div className="w-full cyber-input bg-[#0A192F]/50">
                       {previewKey || "输入前缀和后缀以预览"}
                     </div>
-                  </div>
+                </div>
                   <button
                     type="submit"
                     disabled={isGenerating}
@@ -381,8 +381,8 @@ export default function Keys() {
                   >
                     {isGenerating ? "生成中..." : "生成卡密"}
                   </button>
-                </form>
-              </div>
+              </form>
+                </div>
             )}
 
             {activeTab === 'manage' && (
@@ -421,10 +421,10 @@ export default function Keys() {
                     </button>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
+              <div className="overflow-x-auto">
                   <table className="w-full cyber-table">
-                    <thead>
-                      <tr>
+                  <thead>
+                    <tr>
                         <th className="w-12">
                           <input
                             type="checkbox"
@@ -433,16 +433,16 @@ export default function Keys() {
                             className="rounded border-[#00D1FF]/30"
                           />
                         </th>
-                        <th>卡密</th>
-                        <th>创建时间</th>
-                        <th>过期时间</th>
+                      <th>卡密</th>
+                      <th>创建时间</th>
+                      <th>过期时间</th>
                         <th>状态</th>
-                        <th>操作</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                       {paginatedKeys.map((key) => (
-                        <tr key={key.id}>
+                      <tr key={key.id}>
                           <td>
                             <input
                               type="checkbox"
@@ -454,24 +454,24 @@ export default function Keys() {
                           <td>{key.key}</td>
                           <td>{new Date(key.createdAt).toLocaleString()}</td>
                           <td>{key.expiresAt ? new Date(key.expiresAt).toLocaleString() : '-'}</td>
-                          <td>
-                            <span className={`status-badge ${key.status}`}>
+                        <td>
+                          <span className={`status-badge ${key.status}`}>
                               {key.status === 'active' && '已激活'}
                               {key.status === 'inactive' && '未激活'}
                               {key.status === 'expired' && '已过期'}
-                            </span>
-                          </td>
-                          <td>
+                          </span>
+                        </td>
+                        <td>
                             <div className="flex gap-2">
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(key.key);
-                                  toast.success('卡密已复制到剪贴板');
-                                }}
-                                className="text-[#00D1FF] hover:text-[#64FFDA] transition-colors"
-                              >
-                                复制
-                              </button>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(key.key);
+                                toast.success('卡密已复制到剪贴板');
+                              }}
+                              className="text-[#00D1FF] hover:text-[#64FFDA] transition-colors"
+                            >
+                              复制
+                            </button>
                               {key.status === 'active' && (
                                 <button
                                   onClick={() => handleStatusChange(key.id, 'inactive')}
@@ -480,19 +480,19 @@ export default function Keys() {
                                   失效
                                 </button>
                               )}
-                              <button
-                                onClick={() => handleDeleteKey(key.id)}
+                            <button
+                              onClick={() => handleDeleteKey(key.id)}
                                 className="text-red-400 hover:text-red-300"
-                              >
-                                删除
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                            >
+                              删除
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
                 <div className="mt-4">
                   <Pagination
                     currentPage={currentPage}
@@ -550,9 +550,9 @@ export default function Keys() {
                     </button>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
         </div>
       </div>
     </div>

@@ -487,7 +487,7 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {cards.map((card, index) => (
+            {cards.map((card, index) => (
             <motion.div
               key={card.id}
               initial={{ opacity: 0, y: 20 }}
@@ -495,10 +495,10 @@ export default function Dashboard() {
               transition={{ delay: index * 0.1 }}
               className="bg-[#0A192F]/70 backdrop-blur-sm rounded-xl border border-[#00D1FF]/30 p-6"
             >
-              {card.component}
+                {card.component}
             </motion.div>
-          ))}
-        </div>
+            ))}
+          </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
           <motion.div

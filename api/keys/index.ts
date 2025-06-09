@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
-import prisma from '../../lib/prisma';
+const prisma = require('../../lib/prisma');
 
 // 临时模拟数据库存储，实际生产环境请使用真正的数据库
 interface ActivationKey {
