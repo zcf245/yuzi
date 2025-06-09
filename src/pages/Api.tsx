@@ -88,12 +88,24 @@ export default function Api() {
         k.key === data.key ? { 
           ...k, 
           status: 'active',
-          expiresAt: new Date(Date.now() + (k.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
+          expiresAt: new Date(Date.now() + (k.validDays || 1) * 24 * 60 * 60 * 1000).toISOString(),
+          usedAt: new Date().toISOString(),
+          deviceId: data.deviceId || undefined
         } : k
       );
       
       // 保存更新后的数据
       localStorage.setItem('keys', JSON.stringify(updatedKeys));
+      
+      // 添加激活记录
+      const record = {
+        id: uuidv4(),
+        key: data.key,
+        deviceId: data.deviceId || 'unknown',
+        activatedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + (targetKey.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
+      };
+      storage.addActivationRecord(record);
       
       toast.success('卡密激活成功');
       setActivationResult({
@@ -102,7 +114,8 @@ export default function Api() {
         data: {
           key: targetKey.key,
           status: 'active',
-          activatedAt: new Date().toISOString()
+          activatedAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + (targetKey.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
         }
       });
     } catch (error) {

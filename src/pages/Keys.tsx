@@ -223,17 +223,20 @@ export default function Keys() {
       if (key.id === keyId) {
         if (newStatus === 'active' && key.status === 'inactive') {
           // 如果是激活操作，设置过期时间
+          const expiresAt = new Date(Date.now() + (key.validDays || 1) * 24 * 60 * 60 * 1000).toISOString();
           return {
             ...key,
             status: newStatus,
-            expiresAt: new Date(Date.now() + (key.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
+            expiresAt,
+            usedAt: new Date().toISOString()
           };
         } else if (newStatus === 'inactive' && key.status === 'active') {
-          // 如果是失效操作，清除过期时间
+          // 如果是失效操作，清除过期时间和使用时间
           return {
             ...key,
             status: newStatus,
             expiresAt: '',
+            usedAt: undefined,
             deviceId: undefined
           };
         }

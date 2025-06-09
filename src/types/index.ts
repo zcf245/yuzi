@@ -6,13 +6,18 @@ export interface ActivationKey {
   expiresAt: string;
   usedAt?: string;
   deviceId?: string;
+  validDays: number;
+  prefix?: string;
+  suffix?: string;
 }
 
 export interface ActivationRecord {
   id: string;
   keyId: string;
+  key: string;
   deviceId: string;
   activatedAt: string;
+  expiresAt: string;
   ipAddress: string;
   userAgent: string;
 }
