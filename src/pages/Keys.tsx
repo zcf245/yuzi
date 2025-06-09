@@ -9,33 +9,11 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@/App";
 import Navbar from "@/components/Navbar";
 import Pagination from './Pagination';
-import { cache } from './cache';
-import { storage } from '../lib/storage';
 import { ActivationKey } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 type TabType = 'generate' | 'manage' | 'export';
 type KeyStatus = 'active' | 'inactive' | 'expired';
-
-interface ActivationKey {
-  id: string;
-  key: string;
-  prefix: string;
-  suffix: string;
-  status: KeyStatus;
-  createdAt: string;
-  expiresAt: string;
-  usedAt?: string;
-  deviceId?: string;
-  validDays: number;
-}
-
-interface KeyGenFormValues {
-  count: number;
-  prefix: string;
-  suffix: string;
-  validDays: number;
-}
 
 // 表单验证规则
 const keyGenSchema = z.object({
@@ -47,60 +25,10 @@ const keyGenSchema = z.object({
 
 type KeyGenFormValues = z.infer<typeof keyGenSchema>;
 
-// 模拟数据
-const mockKeys: ActivationKey[] = [
-  {
-    id: "1",
-    key: "DEMO-12345-2025",
-    prefix: "DEMO-",
-    suffix: "-2025",
-    createdAt: "2025-06-08T10:30:00",
-    expiresAt: "2025-07-08T10:30:00",
-    status: "active",
-    validDays: 1,
-  },
-  {
-    id: "3",
-    key: "NEW-54321-2025",
-    prefix: "NEW-",
-    suffix: "-2025",
-    createdAt: "2025-06-09T08:15:00",
-    expiresAt: "2025-07-09T08:15:00",
-    status: "inactive",
-    validDays: 1,
-  },
-  {
-    id: "2",
-    key: "TEST-67890-2025",
-    prefix: "TEST-",
-    suffix: "-2025",
-    createdAt: "2025-06-07T14:45:00",
-    expiresAt: "2025-06-14T14:45:00",
-    status: "expired",
-    validDays: 1,
-  },
-];
-
-function generateRandomKey(length: number) {
-  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const array = new Uint32Array(length);
-  if (window.crypto && window.crypto.getRandomValues) {
-    window.crypto.getRandomValues(array);
-  } else {
-    for (let i = 0; i < length; i++) {
-      array[i] = Math.floor(Math.random() * charset.length);
-    }
-  }
-  return Array.from(array, x => charset[x % charset.length]).join('');
-}
-
 export default function Keys() {
   const navigate = useNavigate();
   const { isAuthenticated, isSuperAdmin } = useContext(AuthContext);
-  const [keys, setKeys] = useState<ActivationKey[]>(() => {
-    const savedKeys = localStorage.getItem('keys');
-    return savedKeys ? JSON.parse(savedKeys) : [];
-  });
+  const [keys, setKeys] = useState<ActivationKey[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [isSelectAll, setIsSelectAll] = useState(false);
@@ -114,7 +42,6 @@ export default function Keys() {
     handleSubmit,
     watch,
     formState: { errors },
-    reset,
   } = useForm<KeyGenFormValues>({
     resolver: zodResolver(keyGenSchema),
     defaultValues: {
@@ -150,12 +77,19 @@ export default function Keys() {
   };
 
   // 加载卡密数据函数
-  const loadKeys = () => {
-    const savedKeys = localStorage.getItem('keys');
-    if (savedKeys) {
-      setKeys(JSON.parse(savedKeys));
-    } else {
-      setKeys([]); // 如果localStorage为空，则设置为空数组
+  const loadKeys = async () => {
+    try {
+      const response = await fetch('/api/keys');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: ActivationKey[] = await response.json();
+      setKeys(data);
+      toast.success('卡密数据已从服务器加载');
+    } catch (error) {
+      console.error('加载卡密失败:', error);
+      toast.error('加载卡密失败');
+      setKeys([]);
     }
   };
 
@@ -167,7 +101,7 @@ export default function Keys() {
 
   // 当activeTab切换到'manage'时，重新加载数据
   useEffect(() => {
-    if (activeTab === 'manage') {
+    if (activeTab === 'manage' || activeTab === 'export') {
       loadKeys();
     }
   }, [activeTab]);
@@ -175,33 +109,21 @@ export default function Keys() {
   const generateKeys = async (data: KeyGenFormValues) => {
     setIsGenerating(true);
     try {
-      const newKeys: ActivationKey[] = [];
-      for (let i = 0; i < data.count; i++) {
-        // 生成25位卡密
-        const randomPart = uuidv4().slice(0, 25 - (data.prefix?.length || 0) - (data.suffix?.length || 0));
-        const key = `${data.prefix || ''}${randomPart}${data.suffix || ''}`.slice(0, 25);
-        
-        newKeys.push({
-          id: uuidv4(),
-          key,
-          prefix: data.prefix || '',
-          suffix: data.suffix || '',
-          status: 'inactive',
-          createdAt: new Date().toISOString(),
-          expiresAt: '', // 初始为空，激活时再设置
-          validDays: data.validDays, // 保存有效期天数
-        });
+      const response = await fetch('/api/keys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // 从localStorage获取现有卡密
-      const existingKeys = JSON.parse(localStorage.getItem('keys') || '[]');
-      // 合并新旧卡密
-      const updatedKeys = [...newKeys, ...existingKeys];
-      // 保存到localStorage
-      localStorage.setItem('keys', JSON.stringify(updatedKeys));
-      // 更新状态
-      setKeys(updatedKeys);
-      toast.success(`成功生成 ${data.count} 个卡密`);
+      const result = await response.json();
+      toast.success(result.message);
+      loadKeys();
     } catch (error) {
       console.error('生成卡密失败:', error);
       toast.error('生成卡密失败');
@@ -228,58 +150,88 @@ export default function Keys() {
   const previewKey = watch("prefix") + "12345" + watch("suffix");
 
   // 删除卡密时更新localStorage
-  const handleDeleteKey = (keyId: string) => {
-    const updatedKeys = keys.filter(key => key.id !== keyId);
-    setKeys(updatedKeys);
-    localStorage.setItem('keys', JSON.stringify(updatedKeys));
-    toast.success('卡密已删除');
+  const handleDeleteKey = async (keyId: string) => {
+    try {
+      const response = await fetch('/api/keys', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: [keyId] }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      toast.success(result.message);
+      loadKeys();
+    } catch (error) {
+      console.error('删除卡密失败:', error);
+      toast.error('删除卡密失败');
+    }
   };
 
   // 更新卡密状态时更新localStorage
-  const handleStatusChange = (keyId: string, newStatus: 'inactive' | 'active' | 'expired') => {
-    const updatedKeys = keys.map(key => {
-      if (key.id === keyId) {
-        if (newStatus === 'active' && key.status === 'inactive') {
-          // 如果是激活操作，设置过期时间
-          const expiresAt = new Date(Date.now() + (key.validDays || 1) * 24 * 60 * 60 * 1000).toISOString();
-          return {
-            ...key,
-            status: newStatus,
-            expiresAt,
-            usedAt: new Date().toISOString()
-          };
-        } else if (newStatus === 'inactive' && key.status === 'active') {
-          // 如果是失效操作，清除过期时间和使用时间
-          return {
-            ...key,
-            status: newStatus,
-            expiresAt: '',
-            usedAt: undefined,
-            deviceId: undefined
-          };
+  const handleStatusChange = async (keyId: string, newStatus: 'inactive' | 'active' | 'expired') => {
+    if (newStatus === 'inactive') {
+      try {
+        const response = await fetch('/api/keys/deactivate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ keyId }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return { ...key, status: newStatus };
+
+        const result = await response.json();
+        toast.success(result.message);
+        loadKeys();
+      } catch (error) {
+        console.error('卡密失效失败:', error);
+        toast.error('卡密失效失败');
       }
-      return key;
-    });
-    setKeys(updatedKeys);
-    localStorage.setItem('keys', JSON.stringify(updatedKeys));
-    toast.success('状态已更新');
+    } else if (newStatus === 'active') {
+      toast.info('激活操作请前往 激活验证接口 页面');
+    } else if (newStatus === 'expired') {
+      toast.info('过期状态由系统自动处理');
+    }
   };
 
   // 批量删除卡密
-  const handleBatchDelete = () => {
+  const handleBatchDelete = async () => {
     if (selectedKeys.length === 0) {
       toast.error('请选择要删除的卡密');
       return;
     }
 
-    const updatedKeys = keys.filter(key => !selectedKeys.includes(key.id));
-    setKeys(updatedKeys);
-    localStorage.setItem('keys', JSON.stringify(updatedKeys));
-    setSelectedKeys([]);
-    setIsSelectAll(false);
-    toast.success(`成功删除 ${selectedKeys.length} 个卡密`);
+    try {
+      const response = await fetch('/api/keys', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: selectedKeys }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      toast.success(result.message);
+      loadKeys();
+      setSelectedKeys([]);
+      setIsSelectAll(false);
+    } catch (error) {
+      console.error('批量删除卡密失败:', error);
+      toast.error('批量删除卡密失败');
+    }
   };
 
   const handleSelectAll = () => {

@@ -9,20 +9,24 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { cache } from './cache';
+import { ActivationKey, ActivationRecord } from '../types';
 
-interface ActivationKey {
-  id: string;
-  key: string;
-  prefix: string;
-  suffix: string;
-  status: 'active' | 'inactive' | 'used' | 'expired';
-  createdAt: string;
-  expiresAt: string;
-}
+// interface ActivationKey {
+//   id: string;
+//   key: string;
+//   prefix: string;
+//   suffix: string;
+//   status: KeyStatus;
+//   createdAt: string;
+//   expiresAt: string;
+//   usedAt?: string;
+//   deviceId?: string;
+//   validDays: number;
+// }
 
 interface ApiTestFormValues {
   key: string;
-  deviceId?: string;
+  deviceId: string;
 }
 
 interface FormData {
@@ -32,7 +36,14 @@ interface FormData {
 
 interface BatchFormData {
   keys: string;
-  deviceId: string;
+  deviceId?: string;
+}
+
+interface ActivationResult {
+  success: boolean;
+  message: string;
+  data?: { key: string; status: string; activatedAt?: string; expiresAt?: string; };
+  error?: string;
 }
 
 export default function Api() {
@@ -42,7 +53,7 @@ export default function Api() {
   const [selectedApiKey, setSelectedApiKey] = useState<string>('');
   const [batchResults, setBatchResults] = useState<BatchValidationResult[]>([]);
   const [newApiKeyName, setNewApiKeyName] = useState('');
-  const [activationResult, setActivationResult] = useState<{ success: boolean; message: string; data?: any; error?: string }>({ success: false, message: '' });
+  const [activationResult, setActivationResult] = useState<ActivationResult>({ success: false, message: '' });
 
   const { register: registerSingle, handleSubmit: handleSubmitSingle, reset: resetSingle } = useForm<FormData>();
   const { register: registerBatch, handleSubmit: handleSubmitBatch, reset: resetBatch } = useForm<BatchFormData>();
@@ -64,154 +75,47 @@ export default function Api() {
 
   const handleActivate = async (data: ApiTestFormValues) => {
     try {
-      // 从localStorage获取卡密数据
-      const keys = JSON.parse(localStorage.getItem('keys') || '[]');
-      const targetKey = keys.find((k: ActivationKey) => k.key === data.key);
-
-      if (!targetKey) {
-        toast.error('卡密不存在');
-        return;
-      }
-
-      if (targetKey.status === 'active') {
-        toast.error('卡密已被激活');
-        return;
-      }
-
-      if (targetKey.status === 'expired') {
-        toast.error('卡密已过期');
-        return;
-      }
-
-      // 更新卡密状态
-      const updatedKeys = keys.map((k: ActivationKey) => 
-        k.key === data.key ? { 
-          ...k, 
-          status: 'active',
-          expiresAt: new Date(Date.now() + (k.validDays || 1) * 24 * 60 * 60 * 1000).toISOString(),
-          usedAt: new Date().toISOString(),
-          deviceId: data.deviceId || undefined
-        } : k
-      );
-      
-      // 保存更新后的数据
-      localStorage.setItem('keys', JSON.stringify(updatedKeys));
-      console.log("Updated keys in localStorage after activation:", updatedKeys);
-      console.log("localStorage.getItem('keys') after activation:", localStorage.getItem('keys'));
-      
-      // 添加激活记录
-      const record = {
-        id: uuidv4(),
-        key: data.key,
-        deviceId: data.deviceId || 'unknown',
-        activatedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + (targetKey.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
-      };
-      storage.addActivationRecord(record);
-      
-      toast.success('卡密激活成功');
-      setActivationResult({
-        success: true,
-        message: '卡密激活成功',
-        data: {
-          key: targetKey.key,
-          status: 'active',
-          activatedAt: new Date().toISOString(),
-          expiresAt: new Date(Date.now() + (targetKey.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
-        }
+      const response = await fetch('/api/keys/activate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key: data.key, deviceId: data.deviceId }),
       });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success(result.message);
+        setActivationResult({
+          success: true,
+          message: result.message,
+          data: result.data,
+        });
+      } else {
+        toast.error(result.message || '激活卡密失败');
+        setActivationResult({
+          success: false,
+          message: result.message || '激活卡密失败',
+          error: result.message || '未知错误',
+        });
+      }
     } catch (error) {
       console.error('激活卡密失败:', error);
       toast.error('激活卡密失败');
       setActivationResult({
         success: false,
         message: '激活卡密失败',
-        error: error instanceof Error ? error.message : '未知错误'
+        error: error instanceof Error ? error.message : '未知错误',
       });
     }
   };
 
   const validateBatchKeys = async (data: BatchFormData) => {
-    if (!selectedApiKey) {
-      toast.error("请选择API密钥");
-      return;
-    }
-
-    const apiKey = apiKeys.find(k => k.id === selectedApiKey);
-    if (!apiKey || !apiKey.isActive) {
-      toast.error("无效的API密钥");
-      return;
-    }
-
-    const keys = data.keys.split('\n').map(k => k.trim()).filter(k => k);
-    const results: BatchValidationResult[] = [];
-
-    for (const key of keys) {
-      const storedKey = cache.get<ActivationKey[]>('keys')?.find((k: any) => k.key === key);
-
-      if (!storedKey) {
-        results.push({
-          key,
-          isValid: false,
-          status: 'invalid',
-          message: '卡密不存在'
-        });
-        continue;
-      }
-
-      if (storedKey.status === 'used') {
-        results.push({
-          key,
-          isValid: false,
-          status: 'used',
-          message: '卡密已被使用'
-        });
-        continue;
-      }
-
-      if (storedKey.status === 'expired') {
-        results.push({
-          key,
-          isValid: false,
-          status: 'expired',
-          message: '卡密已过期'
-        });
-        continue;
-      }
-
-      if (storedKey.status === 'active') {
-        results.push({
-          key,
-          isValid: false,
-          status: 'active',
-          message: '卡密已被激活'
-        });
-        continue;
-      }
-
-      results.push({
-        key,
-        isValid: true,
-        status: 'valid',
-        message: '卡密有效'
-      });
-    }
-
-    setBatchResults(results);
-
-    // 记录API调用日志
-    const log = {
-      id: uuidv4(),
-      apiKeyId: selectedApiKey,
-      endpoint: '/api/validate-batch',
-      method: 'POST',
-      status: 200,
-      timestamp: new Date().toISOString(),
-      ipAddress: '127.0.0.1',
-      requestBody: data,
-      responseBody: { results }
-    };
-    storage.addApiLog(log);
+    toast.info('批量验证功能暂未实现，请等待后续开发');
+    setBatchResults([]);
+    // 批量验证功能需要后端接口支持，目前只是一个占位符
+    // 实际实现时，可以向 /api/keys/validate-batch 发送请求
   };
 
   return (
