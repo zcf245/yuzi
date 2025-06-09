@@ -308,11 +308,6 @@ const StatsCard = ({ title, value, change }: any) => {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [dateRange, setDateRange] = useState<DateRange>({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
-  });
-
   const [keys, setKeys] = useState<ActivationKey[]>([]);
   const [records, setRecords] = useState<ActivationRecord[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -363,15 +358,7 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [keys]);
 
-  const filterDataByDateRange = (data: any[]) => {
-    return data.filter(item => {
-      const date = new Date(item.createdAt || item.activatedAt);
-      return date >= new Date(dateRange.startDate) && date <= new Date(dateRange.endDate);
-    });
-  };
-
   const getStatusDistribution = (): ChartData => {
-    const filteredKeys = filterDataByDateRange(keys);
     const statusCounts = {
       inactive: 0,
       active: 0,
@@ -379,7 +366,7 @@ export default function Dashboard() {
       expired: 0,
     };
 
-    filteredKeys.forEach(key => {
+    keys.forEach(key => {
       statusCounts[key.status]++;
     });
 
@@ -401,10 +388,9 @@ export default function Dashboard() {
   };
 
   const getActivationTrend = (): ChartData => {
-    const filteredRecords = filterDataByDateRange(records);
     const dates = Array.from(
       new Set(
-        filteredRecords.map(record =>
+        records.map(record =>
           new Date(record.activatedAt).toISOString().split('T')[0]
         )
       )
@@ -412,7 +398,7 @@ export default function Dashboard() {
 
     const activationsByDate = dates.map(date => ({
       date,
-      count: filteredRecords.filter(
+      count: records.filter(
         record =>
           new Date(record.activatedAt).toISOString().split('T')[0] === date
       ).length,
@@ -433,8 +419,7 @@ export default function Dashboard() {
   };
 
   const getDeviceDistribution = (): ChartData => {
-    const filteredRecords = filterDataByDateRange(records);
-    const deviceCounts = filteredRecords.reduce((acc, record) => {
+    const deviceCounts = records.reduce((acc, record) => {
       acc[record.deviceId] = (acc[record.deviceId] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -471,106 +456,51 @@ export default function Dashboard() {
     setCards(newCards);
   };
 
-  // 计算统计数据
-  const stats = {
-    totalGenerated: keys.length,
-    totalActivated: keys.filter(key => key.status === 'active' || key.status === 'used').length,
-    activationRate: keys.length > 0 
-      ? ((keys.filter(key => key.status === 'active' || key.status === 'used').length / keys.length) * 100).toFixed(2)
-      : 0,
-  };
-
   return (
     <div className="min-h-screen bg-[#0A192F] text-white">
       <Navbar />
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#00D1FF]">数据看板</h1>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={dateRange.startDate}
-                onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                className="px-4 py-2 bg-[#0A192F]/50 border border-[#00D1FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D1FF]/50 text-white"
-              />
-              <span className="text-white/60">至</span>
-              <input
-                type="date"
-                value={dateRange.endDate}
-                onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                className="px-4 py-2 bg-[#0A192F]/50 border border-[#00D1FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D1FF]/50 text-white"
-              />
-            </div>
-            <button
-              onClick={() => navigate("/keys")}
-              className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20 transition-colors"
-            >
-              <i className="fa-solid fa-key mr-2"></i>
-              卡密管理中心
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/keys")}
+            className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20 transition-colors"
+          >
+            <i className="fa-solid fa-key mr-2"></i>
+            卡密管理中心
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <StatsCard
             title="总生成数"
-            value={stats.totalGenerated}
+            value={keys.length}
           />
           <StatsCard
             title="已激活数"
-            value={stats.totalActivated}
+            value={keys.filter(key => key.status === 'active' || key.status === 'used').length}
           />
           <StatsCard
             title="激活率"
-            value={`${stats.activationRate}%`}
+            value={`${keys.length > 0 
+              ? ((keys.filter(key => key.status === 'active' || key.status === 'used').length / keys.length) * 100).toFixed(2)
+              : 0}%`}
           />
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                开始日期
-              </label>
-              <input
-                type="date"
-                value={dateRange.startDate}
-                onChange={e =>
-                  setDateRange(prev => ({ ...prev, startDate: e.target.value }))
-                }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                结束日期
-              </label>
-              <input
-                type="date"
-                value={dateRange.endDate}
-                onChange={e =>
-                  setDateRange(prev => ({ ...prev, endDate: e.target.value }))
-                }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {cards.map((card, index) => (
+            <motion.div
+              key={card.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-[#0A192F]/70 backdrop-blur-sm rounded-xl border border-[#00D1FF]/30 p-6"
+            >
+              {card.component}
+            </motion.div>
+          ))}
         </div>
-
-        <div className="text-sm text-gray-500 mb-8">
-          最后更新: {lastUpdate.toLocaleString()}
-        </div>
-
-        <DndProvider backend={HTML5Backend}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {cards.map((card, index) => (
-              <DraggableCard key={card.id} id={card.id} onMoveCard={moveCard}>
-                {card.component}
-              </DraggableCard>
-            ))}
-          </div>
-        </DndProvider>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
           <motion.div

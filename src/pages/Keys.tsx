@@ -238,6 +238,71 @@ export default function Keys() {
     toast.success('状态已更新');
   };
 
+  // 批量激活卡密
+  const handleBatchActivate = () => {
+    if (selectedKeys.length === 0) {
+      toast.error('请选择要激活的卡密');
+      return;
+    }
+
+    const updatedKeys = keys.map(key => {
+      if (selectedKeys.includes(key.id) && key.status === 'inactive') {
+        return {
+          ...key,
+          status: 'active',
+          expiresAt: new Date(Date.now() + (key.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
+        };
+      }
+      return key;
+    });
+
+    setKeys(updatedKeys);
+    localStorage.setItem('keys', JSON.stringify(updatedKeys));
+    setSelectedKeys([]);
+    setIsSelectAll(false);
+    toast.success(`成功激活 ${selectedKeys.length} 个卡密`);
+  };
+
+  // 批量停用卡密
+  const handleBatchDeactivate = () => {
+    if (selectedKeys.length === 0) {
+      toast.error('请选择要停用的卡密');
+      return;
+    }
+
+    const updatedKeys = keys.map(key => {
+      if (selectedKeys.includes(key.id) && key.status === 'active') {
+        return {
+          ...key,
+          status: 'inactive',
+          expiresAt: '' // 清除过期时间
+        };
+      }
+      return key;
+    });
+
+    setKeys(updatedKeys);
+    localStorage.setItem('keys', JSON.stringify(updatedKeys));
+    setSelectedKeys([]);
+    setIsSelectAll(false);
+    toast.success(`成功停用 ${selectedKeys.length} 个卡密`);
+  };
+
+  // 批量删除卡密
+  const handleBatchDelete = () => {
+    if (selectedKeys.length === 0) {
+      toast.error('请选择要删除的卡密');
+      return;
+    }
+
+    const updatedKeys = keys.filter(key => !selectedKeys.includes(key.id));
+    setKeys(updatedKeys);
+    localStorage.setItem('keys', JSON.stringify(updatedKeys));
+    setSelectedKeys([]);
+    setIsSelectAll(false);
+    toast.success(`成功删除 ${selectedKeys.length} 个卡密`);
+  };
+
   const handleSelectAll = () => {
     if (isSelectAll) {
       setSelectedKeys([]);
@@ -253,39 +318,6 @@ export default function Keys() {
         ? prev.filter(id => id !== keyId)
         : [...prev, keyId]
     );
-  };
-
-  const handleBatchDelete = () => {
-    if (selectedKeys.length === 0) {
-      toast.error('请选择要删除的卡密');
-      return;
-    }
-
-    if (window.confirm(`确定要删除选中的 ${selectedKeys.length} 个卡密吗？`)) {
-      storage.batchDeleteKeys(selectedKeys);
-      setSelectedKeys([]);
-      setIsSelectAll(false);
-      toast.success('批量删除成功');
-    }
-  };
-
-  const handleBatchUpdateStatus = (newStatus: string) => {
-    if (selectedKeys.length === 0) {
-      toast.error('请选择要修改的卡密');
-      return;
-    }
-
-    const updatedKeys = keys.map(key => {
-      if (selectedKeys.includes(key.id)) {
-        return { ...key, status: newStatus as KeyStatus };
-      }
-      return key;
-    });
-
-    storage.batchUpdateKeys(updatedKeys);
-    setSelectedKeys([]);
-    setIsSelectAll(false);
-    toast.success('批量更新状态成功');
   };
 
   const handleExport = () => {
@@ -428,13 +460,13 @@ export default function Keys() {
                   <h2 className="text-xl font-semibold">管理卡密</h2>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleBatchUpdateStatus('active')}
+                      onClick={handleBatchActivate}
                       className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20"
                     >
                       批量激活
                     </button>
                     <button
-                      onClick={() => handleBatchUpdateStatus('inactive')}
+                      onClick={handleBatchDeactivate}
                       className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20"
                     >
                       批量停用
