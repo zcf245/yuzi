@@ -154,7 +154,7 @@ const DeviceList = ({ keys }: { keys: ActivationKey[] }) => {
     const deviceMap = new Map<string, { lastActive: string; activationCount: number }>();
     
     keys.forEach(key => {
-      if (key.status === 'active' || key.status === 'used') {
+      if (key.status === 'active') {
         const deviceId = key.key.split('-')[0]; // 使用卡密前缀作为设备ID
         const existing = deviceMap.get(deviceId);
         if (existing) {
@@ -229,7 +229,7 @@ const AlertList = ({ keys }: { keys: ActivationKey[] }) => {
     // 检查频繁激活
     const deviceActivations = new Map<string, number>();
     keys.forEach(key => {
-      if (key.status === 'active' || key.status === 'used') {
+      if (key.status === 'active') {
         const deviceId = key.key.split('-')[0];
         deviceActivations.set(deviceId, (deviceActivations.get(deviceId) || 0) + 1);
       }
@@ -341,7 +341,7 @@ export default function Dashboard() {
     const checkExpiredKeys = () => {
       const now = new Date().getTime();
       const updatedKeys = keys.map(key => {
-        if (new Date(key.expiresAt).getTime() < now && key.status !== 'used') {
+        if (key.status === 'active' && new Date(key.expiresAt).getTime() < now) {
           return { ...key, status: 'expired' };
         }
         return key;

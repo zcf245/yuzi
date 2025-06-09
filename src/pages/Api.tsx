@@ -96,6 +96,8 @@ export default function Api() {
       
       // 保存更新后的数据
       localStorage.setItem('keys', JSON.stringify(updatedKeys));
+      console.log("Updated keys in localStorage after activation:", updatedKeys);
+      console.log("localStorage.getItem('keys') after activation:", localStorage.getItem('keys'));
       
       // 添加激活记录
       const record = {

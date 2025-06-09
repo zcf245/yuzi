@@ -97,7 +97,10 @@ function generateRandomKey(length: number) {
 export default function Keys() {
   const navigate = useNavigate();
   const { isAuthenticated, isSuperAdmin } = useContext(AuthContext);
-  const [keys, setKeys] = useState<ActivationKey[]>(mockKeys);
+  const [keys, setKeys] = useState<ActivationKey[]>(() => {
+    const savedKeys = localStorage.getItem('keys');
+    return savedKeys ? JSON.parse(savedKeys) : [];
+  });
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [isSelectAll, setIsSelectAll] = useState(false);
@@ -146,13 +149,28 @@ export default function Keys() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 初始化时从localStorage加载数据
-  useEffect(() => {
+  // 加载卡密数据函数
+  const loadKeys = () => {
     const savedKeys = localStorage.getItem('keys');
     if (savedKeys) {
       setKeys(JSON.parse(savedKeys));
+    } else {
+      setKeys([]); // 如果localStorage为空，则设置为空数组
     }
+  };
+
+  // 在组件挂载时和activeTab为'manage'时加载数据
+  useEffect(() => {
+    // 首次加载数据
+    loadKeys();
   }, []);
+
+  // 当activeTab切换到'manage'时，重新加载数据
+  useEffect(() => {
+    if (activeTab === 'manage') {
+      loadKeys();
+    }
+  }, [activeTab]);
 
   const generateKeys = async (data: KeyGenFormValues) => {
     setIsGenerating(true);
@@ -485,7 +503,7 @@ export default function Keys() {
                           </td>
                           <td>{key.key}</td>
                           <td>{new Date(key.createdAt).toLocaleString()}</td>
-                          <td>{new Date(key.expiresAt).toLocaleString()}</td>
+                          <td>{key.expiresAt ? new Date(key.expiresAt).toLocaleString() : '-'}</td>
                           <td>
                             <span className={`status-badge ${key.status}`}>
                               {key.status === 'active' && '已激活'}
