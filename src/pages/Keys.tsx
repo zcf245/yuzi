@@ -15,7 +15,7 @@ import { ActivationKey } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 type TabType = 'generate' | 'manage' | 'export';
-type KeyStatus = 'active' | 'inactive' | 'used' | 'expired';
+type KeyStatus = 'active' | 'inactive' | 'expired';
 
 interface ActivationKey {
   id: string;
@@ -218,7 +218,7 @@ export default function Keys() {
   };
 
   // 更新卡密状态时更新localStorage
-  const handleStatusChange = (keyId: string, newStatus: 'inactive' | 'active' | 'used' | 'expired') => {
+  const handleStatusChange = (keyId: string, newStatus: 'inactive' | 'active' | 'expired') => {
     const updatedKeys = keys.map(key => {
       if (key.id === keyId) {
         if (newStatus === 'active' && key.status === 'inactive') {
@@ -228,6 +228,14 @@ export default function Keys() {
             status: newStatus,
             expiresAt: new Date(Date.now() + (key.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
           };
+        } else if (newStatus === 'inactive' && key.status === 'active') {
+          // 如果是失效操作，清除过期时间
+          return {
+            ...key,
+            status: newStatus,
+            expiresAt: '',
+            deviceId: undefined
+          };
         }
         return { ...key, status: newStatus };
       }
@@ -236,56 +244,6 @@ export default function Keys() {
     setKeys(updatedKeys);
     localStorage.setItem('keys', JSON.stringify(updatedKeys));
     toast.success('状态已更新');
-  };
-
-  // 批量激活卡密
-  const handleBatchActivate = () => {
-    if (selectedKeys.length === 0) {
-      toast.error('请选择要激活的卡密');
-      return;
-    }
-
-    const updatedKeys = keys.map(key => {
-      if (selectedKeys.includes(key.id) && key.status === 'inactive') {
-        return {
-          ...key,
-          status: 'active',
-          expiresAt: new Date(Date.now() + (key.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
-        };
-      }
-      return key;
-    });
-
-    setKeys(updatedKeys);
-    localStorage.setItem('keys', JSON.stringify(updatedKeys));
-    setSelectedKeys([]);
-    setIsSelectAll(false);
-    toast.success(`成功激活 ${selectedKeys.length} 个卡密`);
-  };
-
-  // 批量停用卡密
-  const handleBatchDeactivate = () => {
-    if (selectedKeys.length === 0) {
-      toast.error('请选择要停用的卡密');
-      return;
-    }
-
-    const updatedKeys = keys.map(key => {
-      if (selectedKeys.includes(key.id) && key.status === 'active') {
-        return {
-          ...key,
-          status: 'inactive',
-          expiresAt: '' // 清除过期时间
-        };
-      }
-      return key;
-    });
-
-    setKeys(updatedKeys);
-    localStorage.setItem('keys', JSON.stringify(updatedKeys));
-    setSelectedKeys([]);
-    setIsSelectAll(false);
-    toast.success(`成功停用 ${selectedKeys.length} 个卡密`);
   };
 
   // 批量删除卡密
@@ -460,18 +418,6 @@ export default function Keys() {
                   <h2 className="text-xl font-semibold">管理卡密</h2>
                   <div className="flex gap-2">
                     <button
-                      onClick={handleBatchActivate}
-                      className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20"
-                    >
-                      批量激活
-                    </button>
-                    <button
-                      onClick={handleBatchDeactivate}
-                      className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20"
-                    >
-                      批量停用
-                    </button>
-                    <button
                       onClick={handleBatchDelete}
                       className="px-4 py-2 bg-red-500/10 border border-red-500/50 text-red-500 rounded-lg hover:bg-red-500/20"
                     >
@@ -495,7 +441,6 @@ export default function Keys() {
                     <option value="all">全部状态</option>
                     <option value="active">已激活</option>
                     <option value="inactive">未激活</option>
-                    <option value="used">已使用</option>
                     <option value="expired">已过期</option>
                   </select>
                 </div>
@@ -536,7 +481,6 @@ export default function Keys() {
                             <span className={`status-badge ${key.status}`}>
                               {key.status === 'active' && '已激活'}
                               {key.status === 'inactive' && '未激活'}
-                              {key.status === 'used' && '已使用'}
                               {key.status === 'expired' && '已过期'}
                             </span>
                           </td>

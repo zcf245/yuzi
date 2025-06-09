@@ -1,7 +1,7 @@
 export interface ActivationKey {
   id: string;
   key: string;
-  status: 'inactive' | 'active' | 'used' | 'expired';
+  status: 'inactive' | 'active' | 'expired';
   createdAt: string;
   expiresAt: string;
   usedAt?: string;

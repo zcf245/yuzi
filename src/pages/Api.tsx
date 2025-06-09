@@ -73,8 +73,8 @@ export default function Api() {
         return;
       }
 
-      if (targetKey.status === 'used') {
-        toast.error('卡密已被使用');
+      if (targetKey.status === 'active') {
+        toast.error('卡密已被激活');
         return;
       }
 
@@ -85,7 +85,11 @@ export default function Api() {
 
       // 更新卡密状态
       const updatedKeys = keys.map((k: ActivationKey) => 
-        k.key === data.key ? { ...k, status: 'used' } : k
+        k.key === data.key ? { 
+          ...k, 
+          status: 'active',
+          expiresAt: new Date(Date.now() + (k.validDays || 1) * 24 * 60 * 60 * 1000).toISOString()
+        } : k
       );
       
       // 保存更新后的数据
@@ -97,7 +101,7 @@ export default function Api() {
         message: '卡密激活成功',
         data: {
           key: targetKey.key,
-          status: 'used',
+          status: 'active',
           activatedAt: new Date().toISOString()
         }
       });

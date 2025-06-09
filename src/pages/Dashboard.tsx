@@ -362,7 +362,6 @@ export default function Dashboard() {
     const statusCounts = {
       inactive: 0,
       active: 0,
-      used: 0,
       expired: 0,
     };
 
@@ -371,7 +370,7 @@ export default function Dashboard() {
     });
 
     return {
-      labels: ['未激活', '已激活', '已使用', '已过期'],
+      labels: ['未激活', '已激活', '已过期'],
       datasets: [
         {
           label: '卡密状态分布',
@@ -379,7 +378,6 @@ export default function Dashboard() {
           backgroundColor: [
             'rgba(54, 162, 235, 0.6)',
             'rgba(75, 192, 192, 0.6)',
-            'rgba(153, 102, 255, 0.6)',
             'rgba(255, 99, 132, 0.6)',
           ],
         },
