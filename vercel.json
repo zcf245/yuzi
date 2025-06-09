@@ -34,6 +34,10 @@
       "continue": true
     },
     {
+      "src": "/prisma/(.*)",
+      "dest": "/prisma/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
