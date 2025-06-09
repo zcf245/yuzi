@@ -418,6 +418,12 @@ export default function Keys() {
                   <h2 className="text-xl font-semibold">管理卡密</h2>
                   <div className="flex gap-2">
                     <button
+                      onClick={handleExport}
+                      className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20"
+                    >
+                      批量导出
+                    </button>
+                    <button
                       onClick={handleBatchDelete}
                       className="px-4 py-2 bg-red-500/10 border border-red-500/50 text-red-500 rounded-lg hover:bg-red-500/20"
                     >
@@ -530,15 +536,48 @@ export default function Keys() {
               <div>
                 <h2 className="text-xl font-semibold mb-4">导出卡密</h2>
                 <div className="space-y-4">
-                  <p className="text-white/80">
-                    当前共有 {keys.length} 个卡密，点击下方按钮导出为CSV文件。
-                  </p>
-                  <button
-                    onClick={handleExport}
-                    className="w-full cyber-button"
-                  >
-                    导出卡密
-                  </button>
+                  <div className="overflow-x-auto">
+                    <table className="w-full cyber-table">
+                      <thead>
+                        <tr>
+                          <th>卡密</th>
+                          <th>创建时间</th>
+                          <th>过期时间</th>
+                          <th>状态</th>
+                          <th>设备ID</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {keys.map((key) => (
+                          <tr key={key.id}>
+                            <td>{key.key}</td>
+                            <td>{new Date(key.createdAt).toLocaleString()}</td>
+                            <td>{key.expiresAt ? new Date(key.expiresAt).toLocaleString() : '-'}</td>
+                            <td>
+                              <span className={`status-badge ${key.status}`}>
+                                {key.status === 'active' && '已激活'}
+                                {key.status === 'inactive' && '未激活'}
+                                {key.status === 'expired' && '已过期'}
+                              </span>
+                            </td>
+                            <td>{key.deviceId || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex justify-between items-center mt-4">
+                    <p className="text-white/80">
+                      当前共有 {keys.length} 个卡密记录
+                    </p>
+                    <button
+                      onClick={exportKeys}
+                      className="px-4 py-2 bg-[#00D1FF]/10 border border-[#00D1FF]/50 text-[#00D1FF] rounded-lg hover:bg-[#00D1FF]/20"
+                    >
+                      <i className="fa-solid fa-download mr-2"></i>
+                      下载记录
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
